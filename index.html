@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FlogFlow · Session replay for Flutter</title>
+<meta name="description" content="flog_flow records what a user does in your Flutter app and exports it as one self-contained HTML file: screens, taps, network requests, errors and logs on a single timeline.">
+<meta property="og:title" content="FlogFlow · Session replay for Flutter">
+<meta property="og:description" content="Every tap, request and error, replayed from one HTML file. No server, no account, no internet.">
+<meta property="og:image" content="https://alemancilla.github.io/flog-flow-media/readme-banner.png">
+<meta property="og:url" content="https://alemancilla.github.io/flog-flow-media/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23111015'/%3E%3Cpath d='M20 46V18h22v6H27v6h13v6H27v10z' fill='%23fff'/%3E%3Ccircle cx='46' cy='44' r='5' fill='%23FC5700'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#111015; --card:#1A1920; --card2:#222129; --line:rgba(255,255,255,.10);
+  --or:#FC5700; --or2:#FF8A3D; --txt:#F6F6F8; --mut:#A9A8B6;
+  --green:#22C55E; --blue:#3B82F6; --red:#EF4444;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--txt);font:17px/1.6 Inter,system-ui,-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+img,video{max-width:100%;height:auto;display:block}
+code{font-family:var(--mono);font-size:.9em}
+.wrap{width:min(1160px,100% - 32px);margin:0 auto}
+
+/* fondo */
+.glow{position:fixed;inset:0;z-index:-1;pointer-events:none;background:
+  radial-gradient(900px 620px at 0% -5%,rgba(252,87,0,.22),rgba(252,87,0,0) 65%),
+  radial-gradient(900px 700px at 100% 100%,rgba(99,102,241,.16),rgba(99,102,241,0) 65%)}
+.glow:after{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.05) 1.2px,transparent 1.4px);background-size:32px 32px}
+
+/* nav */
+nav{position:sticky;top:0;z-index:10;backdrop-filter:blur(12px);background:rgba(17,16,21,.72);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:28px;height:64px}
+.logo{font-weight:900;font-size:24px;letter-spacing:-.04em}
+.logo b{color:var(--or)}
+.logo i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--or);margin-left:3px}
+nav .links{display:flex;gap:22px;margin-left:auto;font-weight:600;font-size:15px;color:var(--mut)}
+nav .links a:hover{color:var(--txt)}
+.btn{display:inline-flex;align-items:center;gap:10px;font-weight:800;font-size:15px;padding:11px 18px;border-radius:12px;border:1.5px solid transparent;transition:transform .15s ease,background .15s ease}
+.btn:hover{transform:translateY(-1px)}
+.btn.pri{background:var(--or);color:#160A04;box-shadow:0 10px 26px rgba(252,87,0,.3)}
+.btn.sec{border-color:var(--line);background:rgba(255,255,255,.04)}
+.btn.sec:hover{background:rgba(255,255,255,.08)}
+
+/* hero */
+.hero{padding:72px 0 40px}
+.hero .wrap{display:grid;grid-template-columns:1.02fr 1fr;gap:48px;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:10px;font:700 13px/1 var(--mono);letter-spacing:.08em;color:#FFB48A;border:1.5px solid rgba(252,87,0,.5);background:rgba(252,87,0,.1);padding:9px 13px;border-radius:999px}
+.pill i{width:7px;height:7px;border-radius:50%;background:var(--or);box-shadow:0 0 0 4px rgba(252,87,0,.22)}
+h1{font-weight:900;font-size:clamp(40px,5.4vw,64px);line-height:1.03;letter-spacing:-.04em;margin:22px 0 18px}
+h1 em{font-style:normal;color:var(--or)}
+.lead{font-size:19px;color:#C9C8D3;max-width:560px}
+.ctas{display:flex;flex-wrap:wrap;gap:12px;margin:30px 0 22px}
+.install{display:flex;align-items:center;gap:14px;max-width:520px;background:#0B0B0E;border:1.5px solid var(--line);border-radius:14px;padding:12px 12px 12px 18px;font:500 15px/1 var(--mono)}
+.install .p{color:var(--or)}
+.install code{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.copy{cursor:pointer;font:700 13px/1 Inter;color:var(--txt);background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:9px;padding:9px 12px}
+.facts{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.facts span{font-weight:700;font-size:13px;color:var(--mut);padding:7px 11px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid var(--line)}
+.shot{border-radius:20px;box-shadow:0 40px 90px rgba(0,0,0,.55)}
+
+/* secciones */
+section{padding:72px 0}
+.kick{font:700 13px/1 var(--mono);letter-spacing:.1em;color:var(--or);margin-bottom:14px}
+h2{font-weight:900;font-size:clamp(30px,3.6vw,44px);line-height:1.08;letter-spacing:-.03em;margin-bottom:14px}
+.sub{color:var(--mut);font-size:18px;max-width:720px}
+.center{text-align:center}.center .sub{margin:0 auto}
+
+/* video */
+.video{margin-top:34px;border-radius:20px;overflow:hidden;border:1px solid var(--line);box-shadow:0 40px 90px rgba(0,0,0,.5);background:#000}
+.video video{width:100%;aspect-ratio:16/9}
+
+/* funciones */
+.feat{display:grid;grid-template-columns:1fr 1.25fr;gap:48px;align-items:center;padding:42px 0;border-top:1px solid var(--line)}
+.feat:nth-of-type(even){grid-template-columns:1.25fr 1fr}
+.feat:nth-of-type(even) .txt{order:2}
+.feat h3{font-weight:800;font-size:28px;letter-spacing:-.02em;margin:6px 0 12px}
+.feat p{color:#C9C8D3}
+.feat ul{margin:14px 0 0 0;list-style:none;display:grid;gap:8px}
+.feat li{display:flex;gap:10px;color:#C9C8D3;font-size:16px}
+.feat li:before{content:'';flex:none;width:8px;height:8px;margin-top:9px;border-radius:50%;background:var(--or)}
+.tag{display:inline-block;font:700 12px/1 var(--mono);letter-spacing:.08em;color:#FFC7A6;background:rgba(252,87,0,.14);border:1px solid rgba(252,87,0,.45);padding:7px 10px;border-radius:999px}
+.feat img{border-radius:16px}
+
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:34px}
+.mini{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px}
+.mini b{display:block;font-size:17px;margin:10px 0 6px}
+.mini span{color:var(--mut);font-size:15px}
+.ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:rgba(252,87,0,.14);border:1px solid rgba(252,87,0,.4);font-size:18px}
+
+/* código */
+pre{background:#0B0B0E;border:1px solid var(--line);border-radius:16px;padding:22px 24px;overflow:auto;font:500 14.5px/1.65 var(--mono);color:#E6E6EE;margin-top:26px}
+.k{color:#C792EA}.t{color:#82AAFF}.s{color:#C3E88D}.c{color:#6B6B78}.f{color:#FFCB6B}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+
+table{width:100%;border-collapse:collapse;margin-top:26px;font-size:15px}
+td,th{border-bottom:1px solid var(--line);padding:14px 12px;text-align:left}
+th{color:var(--mut);font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase}
+td a{color:var(--or2);font-weight:700}
+
+.end{padding:80px 0;text-align:center}
+.end h2{font-size:clamp(32px,4.4vw,52px)}
+footer{border-top:1px solid var(--line);padding:30px 0;color:var(--mut);font-size:14px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between}
+footer a:hover{color:var(--txt)}
+
+@media (max-width:860px){
+  nav .links{display:none}
+  .hero{padding-top:44px}
+  .hero .wrap,.feat,.feat:nth-of-type(even),.two{grid-template-columns:1fr}
+  .feat:nth-of-type(even) .txt{order:0}
+  .grid{grid-template-columns:1fr}
+  section{padding:52px 0}
+}
+</style>
+</head>
+<body>
+<div class="glow"></div>
+
+<nav><div class="wrap">
+  <a class="logo" href="#">Flog<b>Flow</b><i></i></a>
+  <div class="links"><a href="#how">How it works</a><a href="#features">Features</a><a href="#install">Install</a></div>
+  <a class="btn pri" href="https://pub.dev/packages/flog_flow">pub.dev</a>
+</div></nav>
+
+<header class="hero"><div class="wrap">
+  <div>
+    <span class="pill"><i></i>FLUTTER · SESSION REPLAY</span>
+    <h1>Every tap, request and error, replayed from <em>one HTML file</em>.</h1>
+    <p class="lead">flog_flow records what a user does in your Flutter app and exports it as a single self-contained <code>.html</code>: screens, taps, network, errors and logs on one timeline. Attach it to a ticket, send it over Slack, open it with a double click.</p>
+    <div class="ctas">
+      <a class="btn pri" href="https://pub.dev/packages/flog_flow">Get it on pub.dev</a>
+      <a class="btn sec" href="#demo">▶ Watch the demo</a>
+    </div>
+    <div class="install"><span class="p">$</span><code id="cmd">flutter pub add flog_flow</code><button class="copy" data-copy="flutter pub add flog_flow">Copy</button></div>
+    <div class="facts"><span>No server</span><span>No account</span><span>Works offline</span><span>Android · iOS · macOS · Windows · Linux</span></div>
+  </div>
+  <img class="shot" src="readme-replay.gif" alt="Step-by-step replay of a recorded Flutter session in the browser" width="1188" height="957">
+</div></header>
+
+<section id="how"><div class="wrap center">
+  <div class="kick">HOW IT WORKS</div>
+  <h2>Record. Export. Replay anywhere.</h2>
+  <p class="sub">Recording runs inside your app while testers use it. When something looks wrong, they export the session and send one file; whoever opens it sees exactly what happened, in order.</p>
+  <img src="readme-how-it-works.png" alt="1. Use your app. 2. Export one file. 3. Replay it in any browser" style="margin-top:34px;border-radius:20px" width="1600" height="860" loading="lazy">
+</div></section>
+
+<section id="demo"><div class="wrap center">
+  <div class="kick">DEMO</div>
+  <h2>A real session, exported to video</h2>
+  <p class="sub">16 screens, 39 interactions, 31 requests and two recorded errors, rendered as an MP4 by the viewer itself. Authorization headers were removed for this demo.</p>
+  <div class="video"><video src="session-replay.mp4" poster="video-preview.jpg" controls preload="none" playsinline></video></div>
+</div></section>
+
+<section id="features"><div class="wrap">
+  <div class="kick">FEATURES</div>
+  <h2>Everything a bug report needs, in one file</h2>
+
+  <div class="feat">
+    <div class="txt"><span class="tag">REPLAY</span><h3>Step-by-step replay</h3>
+      <p>Every screen and interaction, in order: the exact point of each tap, the direction of each scroll and the navigation it triggered. Play it like a video or move with the arrow keys.</p></div>
+    <img src="readme-replay.gif" alt="Step-by-step replay" loading="lazy" width="1188" height="957">
+  </div>
+  <div class="feat">
+    <div class="txt"><span class="tag">NETWORK</span><h3>Network traffic with Copy cURL</h3>
+      <p>Each request sits next to the tap that caused it: method, URL, status, duration, headers and bodies with a JSON viewer. Repeat any request from a terminal.</p>
+      <ul><li>Dio through <code>flog_flow_dio</code></li><li><code>package:http</code> through <code>flog_flow_http</code></li><li>Any client with <code>recordHttpCall</code></li></ul></div>
+    <img src="readme-network.jpg" alt="Request headers, response JSON and copy as cURL" loading="lazy" width="1540" height="1219">
+  </div>
+  <div class="feat">
+    <div class="txt"><span class="tag">ERRORS</span><h3>Errors with context</h3>
+      <p>Every error is stored with its stack trace and a screenshot of the screen it happened on, in the same timeline as the taps and requests that led to it.</p></div>
+    <img src="readme-errors.jpg" alt="Recorded error with stack trace" loading="lazy" width="1540" height="1219">
+  </div>
+  <div class="feat">
+    <div class="txt"><span class="tag">AI</span><h3>Export for AI</h3>
+      <p>One click builds a configurable <code>.zip</code> for Claude, ChatGPT or Gemini: a readable <code>session.md</code>, a <code>session.json</code> and the key screenshots, starting with automatic findings. Secrets are hidden by default.</p></div>
+    <img src="readme-export-ai.gif" alt="AI export options and generated session summary" loading="lazy" width="1188" height="957">
+  </div>
+  <div class="feat">
+    <div class="txt"><span class="tag">REPORTS</span><h3>Steps to reproduce</h3>
+      <p>Select a range of the timeline and get the bug report written: environment, precondition, numbered steps, observed and expected result. Markdown for Jira, GitHub or Slack.</p></div>
+    <img src="readme-steps.jpg" alt="Generated steps to reproduce" loading="lazy" width="1540" height="1219">
+  </div>
+  <div class="feat">
+    <div class="txt"><span class="tag">SEARCH</span><h3>Search everything</h3>
+      <p><code>⌘K</code> / <code>Ctrl+K</code> searches URLs, bodies, headers, logs, errors and notes, and jumps to the matching action with every hit highlighted.</p></div>
+    <img src="readme-search.gif" alt="Searching inside response bodies" loading="lazy" width="1188" height="957">
+  </div>
+
+  <div class="grid">
+    <div class="mini"><div class="ic">📤</div><b>Built-in export button</b><span>Embedded HTML or encrypted <code>.flowx</code>, shared from the app in one tap.</span></div>
+    <div class="mini"><div class="ic">🎞️</div><b>Export to MP4</b><span>16:9 or 9:16, rendered in the browser with taps, requests and notes.</span></div>
+    <div class="mini"><div class="ic">🗒️</div><b>Notes on any action</b><span>Saved inside the same <code>.html</code> for the next person.</span></div>
+    <div class="mini"><div class="ic">🗺️</div><b>Flow map</b><span>Every screen visited and the action behind each transition.</span></div>
+    <div class="mini"><div class="ic">📡</div><b>System signals</b><span>Background, connection, keyboard, field edits and slow frames.</span></div>
+    <div class="mini"><div class="ic">🔒</div><b>Private by default</b><span>Password fields masked in screenshots, <code>RedactedZone</code> for the rest.</span></div>
+  </div>
+</div></section>
+
+<section id="install"><div class="wrap">
+  <div class="kick">INSTALL</div>
+  <h2>Up and running in three lines</h2>
+  <p class="sub">The README also includes a prompt that lets your AI coding assistant install it for you.</p>
+  <div class="two">
+<pre><span class="c"># the core package</span>
+flutter pub add flog_flow
+<span class="c"># if you use Dio</span>
+flutter pub add flog_flow_dio
+<span class="c"># if you use package:http</span>
+flutter pub add flog_flow_http</pre>
+<pre><span class="k">await</span> <span class="t">FlogFlow</span>.instance.<span class="f">start</span>(appName: <span class="s">'MyApp'</span>);
+
+<span class="t">MaterialApp</span>(
+  navigatorObservers: [<span class="t">FlogFlow</span>.instance.<span class="f">newNavigatorObserver</span>()],
+  builder: (context, child) =&gt; <span class="t">FlogFlogScope</span>(
+    showExportButton: <span class="k">true</span>,
+    child: child!,
+  ),
+);</pre>
+  </div>
+  <table>
+    <tr><th>Package</th><th>Use it when</th></tr>
+    <tr><td><a href="https://pub.dev/packages/flog_flow">flog_flow</a></td><td>Always: recorder, export and viewer</td></tr>
+    <tr><td><a href="https://pub.dev/packages/flog_flow_dio">flog_flow_dio</a></td><td>Your app uses Dio</td></tr>
+    <tr><td><a href="https://pub.dev/packages/flog_flow_http">flog_flow_http</a></td><td>Your app uses <code>package:http</code> (or a package built on it)</td></tr>
+  </table>
+</div></section>
+
+<div class="end"><div class="wrap">
+  <h2>Stop guessing what the user did.</h2>
+  <p class="sub" style="margin:0 auto 28px">Give your testers one button, and your developers the whole story.</p>
+  <a class="btn pri" href="https://pub.dev/packages/flog_flow" style="font-size:17px;padding:14px 22px">Get flog_flow on pub.dev</a>
+</div></div>
+
+<footer><div class="wrap">
+  <span><span class="logo" style="font-size:17px">Flog<b>Flow</b></span> · MIT license · by <a href="https://pub.dev/publishers/alecodeando.dev/packages">alecodeando.dev</a></span>
+  <span><a href="https://pub.dev/packages/flog_flow">pub.dev</a> · <a href="https://pub.dev/packages/flog_flow/changelog">Changelog</a> · <a href="https://github.com/AleMancilla/flog-flow-media">Media</a></span>
+</div></footer>
+
+<script>
+document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',async()=>{
+  try{await navigator.clipboard.writeText(b.dataset.copy);b.textContent='Copied';setTimeout(()=>b.textContent='Copy',1500);}catch(e){}
+}));
+</script>
+</body>
+</html>
